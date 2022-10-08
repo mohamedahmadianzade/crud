@@ -22,7 +22,7 @@ import { UserEntity } from './user/model/db/user.entity';
         password: configService.get('PASSWORD'),
         database: configService.get('DATABASE'),
         entities: [UserEntity],
-        synchronize: true,
+        synchronize: configService.get('SYNCRONIZE'),
       }),
       inject: [ConfigService],
     }),

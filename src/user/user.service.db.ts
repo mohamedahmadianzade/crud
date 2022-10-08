@@ -21,16 +21,23 @@ export class UserServiceDB {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
   ) {}
-  private users: User[] = [];
+
+  removePassFromUserObjects(users) {
+    let result = users.map((user) => {
+      delete user.password;
+      return user;
+    });
+    return result;
+  }
+
   async getAll() {
     let result = await this.userRepository.find();
+    result = this.removePassFromUserObjects(result);
     return GeneralService.serviceResult('', result);
   }
   async getByUserId(userId: string) {
-    let userInfo = await this.userRepository.findOneBy({
-      userId,
-    });
-    if (userInfo) delete userInfo.password;
+    let userInfo = await this.findUserById(userId);
+    if (userInfo) userInfo = this.removePassFromUserObjects([userInfo]);
     return GeneralService.serviceResult('', userInfo);
   }
   async insert(userInsertModel: UserInsertModel) {
@@ -39,7 +46,7 @@ export class UserServiceDB {
     });
     if (userExist)
       GeneralService.raiseError(
-        'username is not valid,please choose another one',
+        'username is used by others,please choose another one',
       );
 
     let user: UserEntity = new UserEntity();
@@ -59,21 +66,17 @@ export class UserServiceDB {
     });
   }
   async update(userId: string, user: UserUpdateModel) {
-    let userInfo = await this.userRepository.findOneBy({
-      userId,
-    });
-    if (!userInfo) GeneralService.raiseError('user not found');
-
+    let userInfo = await this.findUserById(userId);
     userInfo.fullName = user.fullName;
     userInfo.email = user.email ? user.email : userInfo.email;
-    await this.userRepository.update({userId}, userInfo);
+    await this.userRepository.update({ userId }, userInfo);
 
     return GeneralService.serviceResult('user updated successfully', {
       userId,
     });
   }
   async delete(userId: string) {
-    let result = await this.userRepository.delete({userId});
+    let result = await this.userRepository.delete({ userId });
     if (result.affected == 0)
       GeneralService.raiseError(
         'userId is not valid,please choose another one',
@@ -81,5 +84,13 @@ export class UserServiceDB {
     return GeneralService.serviceResult('delete successfullly Done', {
       userId,
     });
+  }
+
+  async findUserById(userId) {
+    let userInfo = await this.userRepository.findOneBy({
+      userId,
+    });
+    if (!userInfo) GeneralService.raiseError('user not found');
+    return userInfo;
   }
 }
