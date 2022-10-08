@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { UserInsertModel  } from './model/userInsertModel.dto';
 import { UserUpdateModel  } from './model/userUpdateModel.dto';
-import { UserServiceDB } from './user.serviceDB';
+import { UserServiceDB } from './user.service.db';
 
 @Controller('usersdb')
 export class UserControllerDB {
